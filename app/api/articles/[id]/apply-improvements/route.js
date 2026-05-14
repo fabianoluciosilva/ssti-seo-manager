@@ -4,13 +4,12 @@ import { NextResponse } from 'next/server'
 export const maxDuration = 30
 
 const WA_URL = 'https://wa.me/552140421350'
-const BLOG_BASE = 'https://www.simplessolucao.com.br/blog'
 
-function para(text, bold = false) {
+function para(text) {
   return {
     type: 'PARAGRAPH',
     content: { style: { textAlign: 'AUTO' } },
-    nodes: [{ type: 'TEXT', content: { text, style: bold ? { bold: true } : {} }, nodes: [] }],
+    nodes: [{ type: 'TEXT', content: { text, style: {} }, nodes: [] }],
   }
 }
 
@@ -21,6 +20,8 @@ function heading(text, level = 2) {
     nodes: [{ type: 'TEXT', content: { text, style: {} }, nodes: [] }],
   }
 }
+
+const MARKER_TEXTS = ['Leia Também', 'Fale com um Especialista em TI']
 
 export async function POST(request, { params }) {
   try {
@@ -33,7 +34,7 @@ export async function POST(request, { params }) {
     // 1. Busca artigo
     const { data: article, error: fetchError } = await supabase
       .from('posts')
-      .select('id, slug, title, content_url, main_keyword, keywords')
+      .select('id, slug, title, content_url, main_keyword')
       .eq('id', id)
       .single()
 
@@ -41,65 +42,61 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Artigo não encontrado' }, { status: 404 })
     }
 
-    // 2. Busca JSON do Storage
-    const contentRes = await fetch(article.content_url)
+    // 2. Busca JSON do Storage (ignora cache-buster)
+    const storageUrl = article.content_url.split('?')[0]
+    const contentRes = await fetch(storageUrl)
     if (!contentRes.ok) {
       return NextResponse.json({ error: 'Não foi possível buscar o conteúdo do artigo no Storage' }, { status: 500 })
     }
     const contentJson = await contentRes.json()
 
-    // 3. Verifica se CTA já foi aplicado
-    if (JSON.stringify(contentJson.richContent).includes(WA_URL)) {
-      return NextResponse.json({ success: false, alreadyApplied: true, message: 'WhatsApp CTA já foi aplicado anteriormente neste artigo.' })
+    // 3. Remove seções anteriores que possamos ter adicionado (idempotente)
+    let baseContent = contentJson.richContent
+    const cutIndex = baseContent.findIndex(node => {
+      const str = JSON.stringify(node)
+      return MARKER_TEXTS.some(m => str.includes(m)) || str.includes(WA_URL)
+    })
+    if (cutIndex !== -1) {
+      baseContent = baseContent.slice(0, cutIndex)
     }
 
-    // 4. Busca artigos relacionados por keyword
-    const baseKeyword = (article.main_keyword || article.title || '').split(' ')[0]
-    let { data: related } = await supabase
-      .from('posts')
-      .select('slug, title')
-      .neq('id', id)
-      .ilike('main_keyword', `%${baseKeyword}%`)
-      .not('title', 'is', null)
-      .limit(4)
+    // 4. Monta CTA com WhatsApp como link clicável (formato Wix Ricos decorations)
+    const ctaPrefix = ctaSugerido
+      ? `${ctaSugerido} Fale agora com a Simples Solução TI pelo WhatsApp: `
+      : 'Precisa de suporte de TI para sua empresa? Fale agora com um especialista pelo WhatsApp: '
 
-    if (!related || related.length < 2) {
-      const { data: recent } = await supabase
-        .from('posts')
-        .select('slug, title')
-        .neq('id', id)
-        .not('seo_title', 'is', null)
-        .limit(4)
-      related = recent || []
+    const ctaNode = {
+      type: 'PARAGRAPH',
+      content: { style: { textAlign: 'AUTO' } },
+      nodes: [
+        {
+          type: 'TEXT',
+          content: { text: ctaPrefix, style: { bold: true } },
+          nodes: [],
+        },
+        {
+          type: 'TEXT',
+          content: { text: '(21) 4042-1350', style: { bold: true } },
+          decorations: [{ type: 'LINK', linkData: { link: { url: WA_URL, target: '_blank' } } }],
+          nodes: [],
+        },
+      ],
     }
-
-    const relatedSlice = related.slice(0, 3)
-
-    // 5. Monta novos nós a adicionar ao final do richContent
-    const cta = ctaSugerido
-      ? `${ctaSugerido} Fale com a Simples Solução TI agora pelo WhatsApp: ${WA_URL}`
-      : `Precisa de suporte de TI para sua empresa? Nossa equipe está pronta para atender! Fale agora com um especialista pelo WhatsApp: ${WA_URL}`
 
     const newNodes = [
       para(' '),
-      ...(relatedSlice.length > 0 ? [
-        heading('Leia Também'),
-        ...relatedSlice.map(a => para(`• ${a.title}  →  ${BLOG_BASE}/${a.slug}`)),
-        para(' '),
-      ] : []),
       heading('Fale com um Especialista em TI'),
-      para(cta, true),
+      ctaNode,
       para(' '),
     ]
 
-    // 6. Upload do JSON atualizado de volta ao Storage
-    const updatedContent = {
-      ...contentJson,
-      richContent: [...contentJson.richContent, ...newNodes],
-    }
+    // 5. Upload do JSON atualizado ao Storage
+    const updatedContent = { ...contentJson, richContent: [...baseContent, ...newNodes] }
 
-    const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
-    const supabaseUpload = createClient(process.env.SUPABASE_URL, key)
+    const supabaseUpload = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
+    )
 
     const { error: uploadError } = await supabaseUpload.storage
       .from('posts')
@@ -111,24 +108,20 @@ export async function POST(request, { params }) {
     if (uploadError) {
       return NextResponse.json({
         success: false,
-        error: `Erro ao salvar no Storage: ${uploadError.message}. Adicione SUPABASE_SERVICE_KEY ao .env e Vercel para permissão de escrita.`,
+        error: `Erro ao salvar no Storage: ${uploadError.message}`,
         preview: newNodes,
       }, { status: 500 })
     }
 
-    // Atualiza content_url com cache-buster para forçar o site a buscar o arquivo novo
-    // O CDN do Supabase Storage cacheia por 1h — o ?v= faz o site ignorar o cache
-    const cacheBuster = `?v=${Date.now()}`
-    const baseUrl = article.content_url.split('?')[0]
+    // 6. Atualiza content_url com cache-buster para invalidar CDN (max-age=3600)
     await supabase
       .from('posts')
-      .update({ content_url: `${baseUrl}${cacheBuster}` })
+      .update({ content_url: `${storageUrl}?v=${Date.now()}` })
       .eq('id', id)
 
     return NextResponse.json({
       success: true,
-      message: `Melhorias aplicadas! ${relatedSlice.length} artigos relacionados + CTA WhatsApp adicionados ao final do artigo.`,
-      related: relatedSlice,
+      message: 'CTA WhatsApp adicionado ao final do artigo com sucesso!',
     })
 
   } catch (err) {
