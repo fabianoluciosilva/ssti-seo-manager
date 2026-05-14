@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 
+export const maxDuration = 30
+
 const SYSTEM_PROMPT = [
   {
     type: 'text',
@@ -63,7 +65,6 @@ export async function POST(request, { params }) {
       seo_description: seo.metaDescription,
       main_keyword: seo.mainKeyword,
       keywords: seo.secondaryKeywords,
-      updated_at: new Date().toISOString(),
     })
     .eq('id', id)
 
