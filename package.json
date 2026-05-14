@@ -5,6 +5,9 @@
   "type": "module",
   "main": "update-seo-supabase.js",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start:next": "next start",
     "start": "node --env-file=.env update-seo-supabase.js",
     "update": "node --env-file=.env update-seo-supabase.js",
     "generate": "node --env-file=.env auto-seo-generator.js",
