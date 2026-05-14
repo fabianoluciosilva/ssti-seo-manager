@@ -2,7 +2,10 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_KEY
+  if (!url || !key) return NextResponse.json({ error: 'SUPABASE_URL ou SUPABASE_KEY não configurados no .env' }, { status: 500 })
+  const supabase = createClient(url, key)
 
   const { data, error } = await supabase.from('posts').select('id, seo_title, main_keyword')
 

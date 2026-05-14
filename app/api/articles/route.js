@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
+function supabaseClient() {
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_KEY
+  if (!url || !key) throw new Error('SUPABASE_URL ou SUPABASE_KEY não configurados no .env')
+  return createClient(url, key)
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -9,7 +16,8 @@ export async function GET(request) {
   const search = searchParams.get('search') || ''
   const sort = searchParams.get('sort') || 'newest'
 
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
+  let supabase
+  try { supabase = supabaseClient() } catch (e) { return NextResponse.json({ error: e.message }, { status: 500 }) }
 
   let query = supabase.from('posts').select('*', { count: 'exact' })
 
