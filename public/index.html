@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEO Manager - Simples Solução TI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    header span {
+      font-size: 0.8rem;
+      color: #64748b;
+      background: #0f172a;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: white;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .stat-card .label {
+      font-size: 0.8rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-card.total .value { color: #94a3b8; }
+    .stat-card.done .value  { color: #4ade80; }
+    .stat-card.pending .value { color: #f59e0b; }
+
+    .stat-card .sub {
+      font-size: 0.75rem;
+      color: #475569;
+      margin-top: 0.4rem;
+    }
+
+    .progress-bar-wrap {
+      background: #0f172a;
+      border-radius: 4px;
+      height: 6px;
+      margin-top: 0.75rem;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #4ade80);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    #btn-generate {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #btn-generate:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    #btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    #btn-refresh {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    #btn-refresh:hover { background: #334155; color: #e2e8f0; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      display: inline-block;
+    }
+
+    .status-dot.running {
+      background: #f59e0b;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .log-section {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .log-header {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .log-header h2 { font-size: 0.9rem; font-weight: 600; color: #94a3b8; }
+
+    #log-status {
+      font-size: 0.75rem;
+      color: #475569;
+    }
+
+    #log-output {
+      font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      padding: 1rem 1.25rem;
+      height: 380px;
+      overflow-y: auto;
+      background: #0f172a;
+      color: #94a3b8;
+    }
+
+    #log-output .line-ok     { color: #4ade80; }
+    #log-output .line-error  { color: #f87171; }
+    #log-output .line-info   { color: #818cf8; }
+    #log-output .line-done   { color: #4ade80; font-weight: 700; }
+    #log-output .line-plain  { color: #64748b; }
+
+    .recent-section {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .recent-header {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid #334155;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.6rem 1.25rem;
+      color: #475569;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #1e293b;
+      background: #0f172a;
+    }
+
+    td {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid #1e293b;
+      color: #94a3b8;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    td.slug { color: #6366f1; font-family: monospace; font-size: 0.8rem; }
+    td.seo-title { color: #e2e8f0; }
+    td.keyword { color: #4ade80; font-size: 0.8rem; }
+
+    .empty-log {
+      color: #334155;
+      text-align: center;
+      padding: 3rem;
+      font-size: 0.85rem;
+    }
+
+    .loading { color: #475569; font-style: italic; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #334155;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">S</div>
+  <h1>SEO Manager</h1>
+  <span>Simples Solução TI</span>
+</header>
+
+<main>
+
+  <div class="stats">
+    <div class="stat-card total">
+      <div class="label">Total de Artigos</div>
+      <div class="value" id="stat-total">—</div>
+      <div class="sub">no banco Supabase</div>
+    </div>
+    <div class="stat-card done">
+      <div class="label">SEO Completo</div>
+      <div class="value" id="stat-done">—</div>
+      <div class="sub" id="stat-pct">—</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+    <div class="stat-card pending">
+      <div class="label">Pendentes</div>
+      <div class="value" id="stat-pending">—</div>
+      <div class="sub">aguardando geração</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="btn-generate" onclick="startGenerate()">
+      <span id="btn-icon">⚡</span> Gerar SEO com IA
+    </button>
+    <button id="btn-refresh" onclick="loadStats()">↻ Atualizar Stats</button>
+    <span id="run-status" style="font-size:0.8rem; color:#475569;"></span>
+  </div>
+
+  <div class="log-section">
+    <div class="log-header">
+      <h2><span class="status-dot" id="status-dot"></span> &nbsp;Log de Execução</h2>
+      <span id="log-status">Aguardando</span>
+    </div>
+    <div id="log-output">
+      <div class="empty-log">Clique em "Gerar SEO com IA" para iniciar o processo.</div>
+    </div>
+  </div>
+
+  <div class="recent-section">
+    <div class="recent-header">Últimos Artigos Otimizados</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Slug</th>
+          <th>SEO Title</th>
+          <th>Keyword Principal</th>
+        </tr>
+      </thead>
+      <tbody id="recent-table">
+        <tr><td colspan="3" class="loading" style="text-align:center; padding:1.5rem;">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer>Simples Solução TI &mdash; SEO Manager v1.1.0</footer>
+
+<script>
+  let running = false;
+
+  async function loadStats() {
+    try {
+      const r = await fetch('/api/stats');
+      const { total, withSEO, pending, recent } = await r.json();
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-done').textContent = withSEO;
+      document.getElementById('stat-pending').textContent = pending;
+
+      const pct = total > 0 ? Math.round((withSEO / total) * 100) : 0;
+      document.getElementById('stat-pct').textContent = `${pct}% do total`;
+      document.getElementById('progress-bar').style.width = pct + '%';
+
+      const tbody = document.getElementById('recent-table');
+      if (!recent.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#475569;padding:1.5rem;">Nenhum artigo otimizado ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = recent.map(a => `
+        <tr>
+          <td class="slug">${a.slug}</td>
+          <td class="seo-title">${a.seo_title || '—'}</td>
+          <td class="keyword">${a.main_keyword || '—'}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      console.error('Erro ao carregar stats:', e);
+    }
+  }
+
+  function appendLog(text, cls) {
+    const out = document.getElementById('log-output');
+    if (out.querySelector('.empty-log')) out.innerHTML = '';
+    const line = document.createElement('div');
+    line.className = cls || 'line-plain';
+    line.textContent = text;
+    out.appendChild(line);
+    out.scrollTop = out.scrollHeight;
+  }
+
+  function setRunning(state) {
+    running = state;
+    const btn = document.getElementById('btn-generate');
+    const dot = document.getElementById('status-dot');
+    const logStatus = document.getElementById('log-status');
+    const runStatus = document.getElementById('run-status');
+    const icon = document.getElementById('btn-icon');
+
+    if (state) {
+      btn.disabled = true;
+      dot.classList.add('running');
+      logStatus.textContent = 'Executando...';
+      runStatus.textContent = 'Processo em andamento...';
+      icon.textContent = '⏳';
+    } else {
+      btn.disabled = false;
+      dot.classList.remove('running');
+      logStatus.textContent = 'Concluído';
+      runStatus.textContent = '';
+      icon.textContent = '⚡';
+    }
+  }
+
+  function startGenerate() {
+    if (running) return;
+    setRunning(true);
+
+    document.getElementById('log-output').innerHTML = '';
+    document.getElementById('log-status').textContent = 'Conectando...';
+
+    const source = new EventSource('/api/generate/stream');
+
+    source.onmessage = (e) => {
+      const { type, data } = JSON.parse(e.data);
+
+      if (type === 'start') {
+        appendLog('▶ ' + data, 'line-info');
+      } else if (type === 'log') {
+        const isOk    = data.includes('] OK:');
+        const isErr   = data.includes('] ERRO:') || data.includes('ERRO:');
+        const isDone  = data.includes('Concluído:') || data.includes('========');
+        const cls = isOk ? 'line-ok' : isErr ? 'line-error' : isDone ? 'line-done' : 'line-plain';
+        appendLog(data, cls);
+      } else if (type === 'error') {
+        appendLog('⚠ ' + data, 'line-error');
+      } else if (type === 'done') {
+        appendLog('✓ ' + data, 'line-done');
+        source.close();
+        setRunning(false);
+        setTimeout(loadStats, 1000);
+      }
+    };
+
+    source.onerror = () => {
+      appendLog('Conexão encerrada.', 'line-plain');
+      source.close();
+      setRunning(false);
+      loadStats();
+    };
+  }
+
+  // Carrega stats ao abrir
+  loadStats();
+</script>
+
+</body>
+</html>

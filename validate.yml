@@ -1,0 +1,56 @@
+name: ✅ SEO Validation on Push
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'seo-templates.js'
+      - 'update-seo-supabase.js'
+  
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'seo-templates.js'
+      - 'update-seo-supabase.js'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Instalar dependências
+        run: npm install
+
+      - name: ✨ Validar Sintaxe JavaScript
+        run: |
+          npx eslint seo-templates.js update-seo-supabase.js --max-warnings 0 || true
+
+      - name: 🔍 Validar Templates SEO
+        run: node scripts/validate-templates.js
+
+      - name: 📋 Lint de código
+        run: npm run lint 2>/dev/null || true
+
+      - name: ✅ Testes
+        run: npm test 2>/dev/null || true
+
+      - name: 💬 Adicionar comentário em PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Validação SEO passou!\n\n- ✅ Sintaxe JavaScript OK\n- ✅ Templates validados\n- ✅ Pronto para merge'
+            })

@@ -1,0 +1,147 @@
+{
+  "name": "ssti-seo-manager",
+  "displayName": "SEO Manager - Simples Solução TI",
+  "version": "1.0.0",
+  "description": "Gerenciador de SEO para Blog com Automação via GitHub Actions",
+  "author": {
+    "name": "Fabiano",
+    "company": "Simples Solução TI",
+    "email": "fabiano@simplessolucao.com.br",
+    "url": "https://simplessolucao.com.br"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/ssti/seo-manager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssti/seo-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ssti/seo-manager/issues"
+  },
+  "keywords": [
+    "seo",
+    "supabase",
+    "blog",
+    "optimization",
+    "github-actions",
+    "automation",
+    "cms",
+    "content-management"
+  ],
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "features": {
+    "web_interface": {
+      "enabled": true,
+      "file": "seo-manager.html",
+      "description": "Interface web para otimizar artigos"
+    },
+    "cli_automation": {
+      "enabled": true,
+      "file": "update-seo-supabase.js",
+      "description": "Script Node.js para automação"
+    },
+    "github_actions": {
+      "enabled": true,
+      "workflows": [
+        {
+          "name": "seo-optimization.yml",
+          "schedule": "0 9 * * 1",
+          "description": "Executa toda segunda-feira às 09:00 UTC"
+        },
+        {
+          "name": "validate.yml",
+          "trigger": "push",
+          "description": "Valida cada push"
+        }
+      ]
+    },
+    "templates": {
+      "enabled": true,
+      "file": "seo-templates.js",
+      "count": 10,
+      "description": "Templates pré-prontos para SSTI artigos"
+    }
+  },
+  "integrations": {
+    "supabase": {
+      "enabled": true,
+      "version": "2.38.4",
+      "description": "Banco de dados PostgreSQL em nuvem"
+    },
+    "github": {
+      "enabled": true,
+      "features": ["Actions", "Secrets", "Artifacts"]
+    },
+    "slack": {
+      "enabled": false,
+      "optional": true,
+      "description": "Notificações no Slack (opcional)"
+    },
+    "email": {
+      "enabled": false,
+      "optional": true,
+      "description": "Notificações por email (opcional)"
+    }
+  },
+  "checklist_items": 8,
+  "supported_articles": 10,
+  "seo_metrics": {
+    "title_max_chars": 60,
+    "description_max_chars": 160,
+    "min_content_words": 800,
+    "min_internal_links": 2,
+    "max_internal_links": 4
+  },
+  "documentation": {
+    "quickstart": "QUICKSTART.md",
+    "setup": "GITHUB_SETUP.md",
+    "secrets": "GITHUB_SECRETS.md",
+    "full": "README.md",
+    "changelog": "CHANGELOG.md",
+    "contributing": "CONTRIBUTING.md"
+  },
+  "scripts": {
+    "start": "node update-seo-supabase.js",
+    "validate": "node scripts/validate-templates.js",
+    "test": "node tests/test-seo.js"
+  },
+  "status": "active",
+  "lastUpdated": "2024-05-14",
+  "releaseDate": "2024-05-14",
+  "roadmap": [
+    {
+      "version": "1.1.0",
+      "features": [
+        "Componente React para Next.js",
+        "Integração Google Search Console",
+        "Análise de concorrentes"
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "features": [
+        "Dashboard web interativo",
+        "Gráficos de tendências",
+        "Exportar PDF/Excel"
+      ]
+    },
+    {
+      "version": "2.0.0",
+      "features": [
+        "SaaS multi-tenant",
+        "API REST pública",
+        "Webhooks customizáveis"
+      ]
+    }
+  ],
+  "stats": {
+    "total_files": 15,
+    "total_lines_code": 2500,
+    "workflows": 2,
+    "templates": 10,
+    "docs_pages": 7
+  }
+}

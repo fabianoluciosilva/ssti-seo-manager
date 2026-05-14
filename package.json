@@ -1,0 +1,37 @@
+{
+  "name": "ssti-seo-manager",
+  "version": "1.0.0",
+  "description": "Gerenciador de SEO para artigos do blog da Simples Solução TI",
+  "type": "module",
+  "main": "update-seo-supabase.js",
+  "scripts": {
+    "start": "node --env-file=.env update-seo-supabase.js",
+    "update": "node --env-file=.env update-seo-supabase.js",
+    "generate": "node --env-file=.env auto-seo-generator.js",
+    "dashboard": "node --env-file=.env server.js",
+    "validate": "node scripts/validate-templates.js",
+    "lint": "eslint . --ext .js",
+    "test": "node tests/test-seo.js",
+    "help": "cat README.md"
+  },
+  "keywords": [
+    "seo",
+    "supabase",
+    "blog",
+    "simples-solucao",
+    "optimization"
+  ],
+  "author": "Fabiano - Simples Solução TI",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@supabase/supabase-js": "^2.38.4",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.48.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

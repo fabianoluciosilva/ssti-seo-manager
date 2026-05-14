@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Manager - Simples Solução TI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 44px;
+        }
+
+        button.primary {
+            background: #667eea;
+            color: white;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        button.primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button.secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        button.secondary:hover {
+            background: #e8e8e8;
+        }
+
+        button.danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .articles-list {
+            display: grid;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .article-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .article-item:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateX(4px);
+        }
+
+        .article-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .article-item small {
+            color: #666;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .tab {
+            padding: 12px 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            margin: 0;
+            min-height: auto;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .char-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .checklist-item input {
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .checklist-item strong {
+            display: block;
+            color: #333;
+        }
+
+        .checklist-item span {
+            display: block;
+            color: #666;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #1565c0;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button.primary {
+                min-width: auto;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🔍 SEO Manager</h1>
+        <p>Otimize seus artigos do blog com as melhores práticas de SEO</p>
+    </header>
+
+    <!-- SEÇÃO 1: CONEXÃO -->
+    <div class="section">
+        <div class="section-title">
+            🔗 Passo 1: Conecte-se ao Supabase
+        </div>
+
+        <div id="connectionAlert" class="alert"></div>
+
+        <div class="form-group">
+            <label>URL do Projeto Supabase</label>
+            <input type="text" id="supabaseUrl" placeholder="https://seu-projeto.supabase.co" value="https://sshwjdhnjlevwxqaeqqa.supabase.co">
+        </div>
+
+        <div class="form-group">
+            <label>Chave de API (anon public)</label>
+            <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <div class="info-box">
+            <strong>Como obter suas credenciais:</strong>
+            1. Acesse <strong>Settings → API</strong> no Supabase<br>
+            2. Copie <strong>Project URL</strong> e <strong>anon public key</strong><br>
+            3. Cole aqui e clique em "Testar Conexão"
+        </div>
+
+        <div class="button-group">
+            <button class="primary" onclick="testConnection()">🔗 Testar Conexão</button>
+            <button class="secondary" onclick="togglePasswordVisibility()">👁️ Mostrar/Ocultar</button>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 2: ARTIGOS -->
+    <div id="articlesSection" class="section hidden">
+        <div class="section-title">
+            📚 Passo 2: Selecione um Artigo
+        </div>
+
+        <div class="form-group">
+            <label>Buscar artigos (por título ou slug)</label>
+            <input type="text" id="searchInput" placeholder="Ex: migração, contabil..." oninput="filterArticles()">
+        </div>
+
+        <div id="articlesList" class="articles-list"></div>
+    </div>
+
+    <!-- SEÇÃO 3: EDITOR -->
+    <div id="editorSection" class="section hidden">
+        <div class="section-title">
+            ✏️ Passo 3: Otimize com SEO
+        </div>
+
+        <div id="editorAlert" class="alert"></div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="label">SEO Score</div>
+                <div class="value" id="seoScore">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Checklist</div>
+                <div class="value" id="checklistScore">0/8</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('meta')">Meta Tags</button>
+            <button class="tab" onclick="switchTab('content')">Conteúdo</button>
+            <button class="tab" onclick="switchTab('checklist')">Checklist</button>
+        </div>
+
+        <!-- TAB: META TAGS -->
+        <div id="meta" class="tab-content active">
+            <div class="form-group">
+                <label>Title Tag (máx 60 caracteres)</label>
+                <input type="text" id="titleTag" maxlength="70" oninput="updateStats(); updateCharCount(this, 'titleCount', 60)">
+                <div class="char-count"><span id="titleCount">0</span>/60</div>
+            </div>
+
+            <div class="form-group">
+                <label>Meta Description (máx 160 caracteres)</label>
+                <textarea id="metaDescription" maxlength="170" oninput="updateStats(); updateCharCount(this, 'descCount', 160)"></textarea>
+                <div class="char-count"><span id="descCount">0</span>/160</div>
+            </div>
+
+            <div class="form-group">
+                <label>Meta Keywords (opcional, separadas por vírgula)</label>
+                <input type="text" id="metaKeywords" placeholder="migração, sistema contábil, prosoft...">
+            </div>
+
+            <div class="form-group">
+                <label>Slug (URL amigável - sem acentos)</label>
+                <input type="text" id="slug" placeholder="migracao-de-sistema-contabil" oninput="updateStats()">
+            </div>
+
+            <div class="info-box">
+                <strong>💡 Melhores práticas de Meta:</strong>
+                • Title: Coloque a keyword no início, máximo 60 caracteres<br>
+                • Description: Inclua um CTA ("Descubra", "Comece agora"), máximo 160 caracteres<br>
+                • Slug: Use hífens, sem acentos, com palavras-chave principais
+            </div>
+        </div>
+
+        <!-- TAB: CONTEÚDO -->
+        <div id="content" class="tab-content">
+            <div class="form-group">
+                <label>H1 Principal (título do artigo)</label>
+                <input type="text" id="h1" placeholder="Seu título principal aqui" oninput="updateStats()">
+            </div>
+
+            <div class="form-group">
+                <label>Palavra-chave Principal</label>
+                <input type="text" id="mainKeyword" placeholder="Ex: migração de sistema contábil" oninput="updateStats()">
+            </div>
+
+            <div class="form-group">
+                <label>Palavras-chave Secundárias (separadas por vírgula)</label>
+                <input type="text" id="secondaryKeywords" placeholder="Ex: prosoft, contabilidade, segurança" oninput="updateStats()">
+            </div>
+
+            <div class="form-group">
+                <label>Introdução/Resumo (primeiras 200 palavras)</label>
+                <textarea id="intro" placeholder="Contextualize o problema e apresente a solução..."></textarea>
+            </div>
+
+            <div class="info-box">
+                <strong>📝 Dicas de conteúdo:</strong>
+                • Coloque a keyword principal nos primeiros 100 palavras<br>
+                • Use H2 e H3 com keywords secundárias<br>
+                • Estruture com bullets, listas e tabelas<br>
+                • Adicione links internos e externos com âncoras descritivas<br>
+                • Mínimo 800 palavras para melhor ranking
+            </div>
+        </div>
+
+        <!-- TAB: CHECKLIST -->
+        <div id="checklist" class="tab-content">
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check1" onchange="updateStats()">
+                    <div>
+                        <strong>✓ Keyword no H1 e primeiras 100 palavras</strong>
+                        <span>A palavra-chave deve aparecer naturalmente no título e abertura</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check2" onchange="updateStats()">
+                    <div>
+                        <strong>✓ Meta description com call-to-action</strong>
+                        <span>Inclua um CTA ("Descubra", "Comece agora") para aumentar CTR</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check3" onchange="updateStats()">
+                    <div>
+                        <strong>✓ Estrutura com H2 e H3</strong>
+                        <span>Mínimo 3 seções H2, cada uma com 2-3 H3 quando apropriado</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check4" onchange="updateStats()">
+                    <div>
+                        <strong>✓ URLs otimizadas (slug)</strong>
+                        <span>Slug descritivo, sem números sequenciais, com keyword</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check5" onchange="updateStats()">
+                    <div>
+                        <strong>✓ Links internos (2-4 por artigo)</strong>
+                        <span>Aponte para posts relacionados usando âncoras relevantes</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check6" onchange="updateStats()">
+                    <div>
+                        <strong>✓ Imagem com alt text</strong>
+                        <span>Pelo menos uma imagem com atributo alt descritivo</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check7" onchange="updateStats()">
+                    <div>
+                        <strong>✓ Tamanho de conteúdo (mínimo 800 palavras)</strong>
+                        <span>Conteúdo longo (800-2000+ palavras) ranqueia melhor</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="check8" onchange="updateStats()">
+                    <div>
+                        <strong>✓ Schema Markup (JSON-LD)</strong>
+                        <span>Adicione schema.org para artigos (Article, BlogPosting)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 4: SALVAR -->
+    <div id="saveSection" class="section hidden">
+        <div class="section-title">
+            💾 Passo 4: Salvar Alterações
+        </div>
+
+        <div id="saveAlert" class="alert"></div>
+
+        <div class="info-box">
+            <strong>✅ Antes de salvar:</strong>
+            • Title tag e meta description preenchidas<br>
+            • H1 único e com keyword principal<br>
+            • Slug otimizado (sem acentos, hífens)<br>
+            • Conteúdo bem estruturado com H2/H3<br>
+            • Mínimo 70% do checklist completado
+        </div>
+
+        <div class="button-group">
+            <button class="primary" onclick="saveToSupabase()">💾 Salvar no Supabase</button>
+            <button class="secondary" onclick="resetForm()">🔄 Limpar Formulário</button>
+            <button class="secondary" onclick="loadArticlesList()">📚 Carregar Outro Artigo</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let supabase = null;
+    let allArticles = [];
+    let currentArticle = null;
+
+    function showAlert(id, message, type) {
+        const alert = document.getElementById(id);
+        alert.className = `alert ${type} show`;
+        alert.innerHTML = `<span>${message}</span>`;
+        setTimeout(() => alert.classList.remove('show'), 4000);
+    }
+
+    function togglePasswordVisibility() {
+        const input = document.getElementById('supabaseKey');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    async function testConnection() {
+        const url = document.getElementById('supabaseUrl').value.trim();
+        const key = document.getElementById('supabaseKey').value.trim();
+
+        if (!url || !key) {
+            showAlert('connectionAlert', '❌ URL e Chave são obrigatórias', 'error');
+            return;
+        }
+
+        showAlert('connectionAlert', '⏳ Testando conexão...', 'info');
+
+        try {
+            supabase = window.supabase.createClient(url, key);
+            const { data, error } = await supabase.from('posts').select('id').limit(1);
+
+            if (error) {
+                showAlert('connectionAlert', `❌ Erro: ${error.message}`, 'error');
+                return;
+            }
+
+            showAlert('connectionAlert', '✅ Conectado com sucesso!', 'success');
+            document.getElementById('articlesSection').classList.remove('hidden');
+            document.getElementById('editorSection').classList.remove('hidden');
+            document.getElementById('saveSection').classList.remove('hidden');
+            
+            loadArticlesList();
+        } catch (e) {
+            showAlert('connectionAlert', `❌ Erro: ${e.message}`, 'error');
+        }
+    }
+
+    async function loadArticlesList() {
+        const list = document.getElementById('articlesList');
+        list.innerHTML = '<div class="loading"></div> Carregando artigos...';
+
+        try {
+            const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            allArticles = data || [];
+            displayArticles(allArticles);
+        } catch (e) {
+            list.innerHTML = `<div style="color: #dc3545;">❌ Erro: ${e.message}</div>`;
+        }
+    }
+
+    function displayArticles(articles) {
+        const list = document.getElementById('articlesList');
+        list.innerHTML = '';
+
+        if (articles.length === 0) {
+            list.innerHTML = '<p style="color: #999;">Nenhum artigo encontrado</p>';
+            return;
+        }
+
+        articles.forEach(article => {
+            const div = document.createElement('div');
+            div.className = 'article-item';
+            div.innerHTML = `
+                <strong>${article.title || 'Sem título'}</strong>
+                <small>/${article.slug || 'sem-slug'}</small>
+            `;
+            div.onclick = () => loadArticle(article);
+            list.appendChild(div);
+        });
+    }
+
+    function filterArticles() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allArticles.filter(a =>
+            (a.title || '').toLowerCase().includes(search) ||
+            (a.slug || '').toLowerCase().includes(search)
+        );
+        displayArticles(filtered);
+    }
+
+    function loadArticle(article) {
+        currentArticle = article;
+
+        document.getElementById('titleTag').value = article.seoData?.title || '';
+        document.getElementById('metaDescription').value = article.seoData?.description || '';
+        document.getElementById('slug').value = article.slug || '';
+        document.getElementById('h1').value = article.title || '';
+        document.getElementById('mainKeyword').value = article.main_keyword || '';
+        document.getElementById('secondaryKeywords').value = article.keywords || '';
+        document.getElementById('metaKeywords').value = article.seoData?.keywords || '';
+
+        updateStats();
+        document.querySelector('.tab').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function updateCharCount(input, id, max) {
+        document.getElementById(id).textContent = Math.min(input.value.length, max);
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    function updateStats() {
+        let score = 0;
+        const maxScore = 100;
+        let checklistCount = 0;
+
+        // Meta tags (30 pontos)
+        if (document.getElementById('titleTag').value.length >= 30) score += 15;
+        if (document.getElementById('metaDescription').value.length >= 120) score += 15;
+
+        // Conteúdo (40 pontos)
+        if (document.getElementById('h1').value.length > 0) score += 10;
+        if (document.getElementById('mainKeyword').value.length > 0) score += 15;
+        if (document.getElementById('slug').value.length > 0) score += 15;
+
+        // Checklist (30 pontos)
+        for (let i = 1; i <= 8; i++) {
+            if (document.getElementById(`check${i}`).checked) {
+                checklistCount++;
+                score += Math.ceil(30 / 8);
+            }
+        }
+
+        document.getElementById('seoScore').textContent = Math.min(score, 100) + '%';
+        document.getElementById('checklistScore').textContent = `${checklistCount}/8`;
+    }
+
+    async function saveToSupabase() {
+        if (!currentArticle) {
+            showAlert('saveAlert', '❌ Nenhum artigo selecionado', 'error');
+            return;
+        }
+
+        const score = parseInt(document.getElementById('seoScore').textContent);
+        if (score < 60) {
+            showAlert('saveAlert', '⚠️ Atinja pelo menos 60% de score antes de salvar', 'warning');
+            return;
+        }
+
+        showAlert('saveAlert', '⏳ Salvando...', 'info');
+
+        try {
+            const { error } = await supabase.from('posts').update({
+                title: document.getElementById('h1').value,
+                slug: document.getElementById('slug').value,
+                seoData: {
+                    title: document.getElementById('titleTag').value,
+                    description: document.getElementById('metaDescription').value,
+                    keywords: document.getElementById('metaKeywords').value
+                },
+                main_keyword: document.getElementById('mainKeyword').value,
+                keywords: document.getElementById('secondaryKeywords').value,
+                updated_at: new Date().toISOString()
+            }).eq('id', currentArticle.id);
+
+            if (error) throw error;
+
+            showAlert('saveAlert', '✅ Artigo atualizado com sucesso!', 'success');
+            setTimeout(() => loadArticlesList(), 1500);
+        } catch (e) {
+            showAlert('saveAlert', `❌ Erro: ${e.message}`, 'error');
+        }
+    }
+
+    function resetForm() {
+        document.querySelectorAll('input[type="text"], textarea').forEach(el => el.value = '');
+        document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+        updateStats();
+    }
+</script>
+
+</body>
+</html>

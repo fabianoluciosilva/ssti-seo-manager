@@ -1,0 +1,97 @@
+name: 📊 SEO Optimization Runner
+
+on:
+  schedule:
+    # Executar toda segunda-feira às 09:00 (horário UTC)
+    - cron: '0 9 * * 1'
+  
+  # Permite executar manualmente
+  workflow_dispatch:
+    inputs:
+      articles:
+        description: 'Artigos para otimizar (deixe em branco para todos)'
+        required: false
+        default: ''
+
+jobs:
+  seo-optimization:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Instalar dependências
+        run: npm install
+
+      - name: 🔑 Criar arquivo .env
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          EOF
+
+      - name: 🚀 Executar otimizações de SEO
+        run: npm start
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+      - name: 📊 Upload do relatório
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: seo-report
+          path: seo-report.json
+          retention-days: 30
+
+      - name: 📧 Enviar relatório por email (opcional)
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_SERVER }}
+          server_port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: '📊 Relatório SEO - Simples Solução TI'
+          to: ${{ secrets.EMAIL_RECIPIENT }}
+          from: 'GitHub Actions <actions@github.com>'
+          body: |
+            Olá Fabiano,
+            
+            O processo de otimização de SEO foi executado com sucesso!
+            
+            ✅ Artigos analisados e atualizados
+            📊 Relatório disponível em: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Acesse o arquivo de relatório para detalhes completos.
+            
+            ---
+            Simples Solução TI - SEO Manager
+            https://github.com/${{ github.repository }}
+
+      - name: 🔔 Notificação Slack (opcional)
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "📊 SEO Optimization Report",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *SEO Optimization Completed*\n\n*Projeto:* Simples Solução TI\n*Status:* Sucesso\n*Relatório:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
