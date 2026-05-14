@@ -4,6 +4,7 @@ Todas as mudanças importantes do projeto SEO Manager são documentadas aqui.
 
 ## [1.0.0] - 2024-05-14
 
+
 ### ✨ Adicionado
 - **Interface Web HTML** (`seo-manager.html`)
   - Conecta direto ao Supabase
