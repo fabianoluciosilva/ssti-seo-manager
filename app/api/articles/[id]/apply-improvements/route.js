@@ -116,6 +116,15 @@ export async function POST(request, { params }) {
       }, { status: 500 })
     }
 
+    // Atualiza content_url com cache-buster para forçar o site a buscar o arquivo novo
+    // O CDN do Supabase Storage cacheia por 1h — o ?v= faz o site ignorar o cache
+    const cacheBuster = `?v=${Date.now()}`
+    const baseUrl = article.content_url.split('?')[0]
+    await supabase
+      .from('posts')
+      .update({ content_url: `${baseUrl}${cacheBuster}` })
+      .eq('id', id)
+
     return NextResponse.json({
       success: true,
       message: `Melhorias aplicadas! ${relatedSlice.length} artigos relacionados + CTA WhatsApp adicionados ao final do artigo.`,
