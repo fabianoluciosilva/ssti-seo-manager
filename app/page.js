@@ -132,7 +132,7 @@ function Panel({ data, onClose }) {
 
         {type === 'audit' && <AuditPanel article={article} />}
         {type === 'fix-seo' && result?.seo && <FixSEOPanel seo={result.seo} />}
-        {type === 'improve-content' && result?.suggestions && <ContentPanel s={result.suggestions} />}
+        {type === 'improve-content' && result?.suggestions && <ContentPanel s={result.suggestions} article={article} />}
       </div>
     </div>
   )
@@ -200,14 +200,36 @@ function FixSEOPanel({ seo }) {
   )
 }
 
-function ContentPanel({ s }) {
+function ContentPanel({ s, article }) {
+  const [applying, setApplying] = useState(false)
+  const [applyResult, setApplyResult] = useState(null)
   const scoreColor = s.score_estimado >= 7 ? C.green : s.score_estimado >= 5 ? C.yellow : C.red
+
+  async function handleApply() {
+    setApplying(true)
+    setApplyResult(null)
+    try {
+      const res = await fetch(`/api/articles/${article.id}/apply-improvements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ctaSugerido: s.cta_sugerido }),
+      })
+      const data = await res.json()
+      setApplyResult(data)
+    } catch (e) {
+      setApplyResult({ success: false, error: e.message })
+    } finally {
+      setApplying(false)
+    }
+  }
+
   return (
     <>
       <div style={{ background: C.bg, borderRadius: 8, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ fontSize: 36, fontWeight: 800, color: scoreColor }}>{s.score_estimado}</div>
         <div><div style={{ fontSize: 13, color: C.text, fontWeight: 600 }}>Score de conteúdo</div><div style={{ fontSize: 11, color: C.textMuted }}>estimado pela IA</div></div>
       </div>
+
       {s.melhorias_sugeridas?.length > 0 && <ListSection title="Melhorias sugeridas" items={s.melhorias_sugeridas} icon="→" color={C.yellow} bg="#1c1400" border="#92400e" />}
       {s.estrutura_ideal?.length > 0 && <ListSection title="Estrutura ideal de seções" items={s.estrutura_ideal} icon="#" color={C.blue} bg="#0c1a2e" border="#1d4ed8" />}
       {s.palavras_chave_semanticas?.length > 0 && (
@@ -218,7 +240,47 @@ function ContentPanel({ s }) {
           </div>
         </div>
       )}
-      {s.cta_sugerido && <Row label="CTA sugerido" value={`"${s.cta_sugerido}"`} />}
+      {s.cta_sugerido && <Row label="CTA sugerido pela IA" value={`"${s.cta_sugerido}"`} />}
+
+      {/* O que será implantado */}
+      <div style={{ background: '#0c1a2e', border: `1px solid #1d4ed8`, borderRadius: 8, padding: '12px 14px' }}>
+        <div style={{ fontSize: 11, color: '#93c5fd', fontWeight: 600, marginBottom: 8 }}>O QUE SERÁ ADICIONADO AO ARTIGO</div>
+        <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.7 }}>
+          ✓ Seção <strong style={{ color: C.text }}>"Leia Também"</strong> com links para artigos relacionados<br />
+          ✓ Seção <strong style={{ color: C.text }}>"Fale com um Especialista"</strong> com o CTA sugerido<br />
+          ✓ Link direto para WhatsApp <strong style={{ color: C.text }}>wa.me/552140421350</strong>
+        </div>
+      </div>
+
+      {/* Resultado da implantação */}
+      {applyResult && (
+        <div style={{
+          background: applyResult.success ? '#052e16' : applyResult.alreadyApplied ? '#1c1a00' : '#2d1515',
+          border: `1px solid ${applyResult.success ? '#065f46' : applyResult.alreadyApplied ? '#92400e' : '#7f1d1d'}`,
+          borderRadius: 8, padding: '12px 14px', fontSize: 13,
+          color: applyResult.success ? '#6ee7b7' : applyResult.alreadyApplied ? '#fbbf24' : '#fca5a5',
+        }}>
+          {applyResult.success ? '✓ ' : applyResult.alreadyApplied ? '⚠ ' : '✕ '}
+          {applyResult.message || applyResult.error}
+          {applyResult.success && applyResult.related?.length > 0 && (
+            <div style={{ marginTop: 8, fontSize: 12, color: '#34d399' }}>
+              {applyResult.related.map(r => <div key={r.slug}>→ {r.title}</div>)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Botão implantar */}
+      {!applyResult?.success && !applyResult?.alreadyApplied && (
+        <Btn
+          variant="success"
+          loading={applying}
+          disabled={applying}
+          onClick={handleApply}
+        >
+          🚀 Implantar Melhorias no Artigo
+        </Btn>
+      )}
     </>
   )
 }
