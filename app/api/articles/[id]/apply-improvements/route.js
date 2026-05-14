@@ -77,7 +77,6 @@ export async function POST(request, { params }) {
         {
           type: 'TEXT',
           content: { text: '(21) 4042-1350', style: { bold: true } },
-          decorations: [{ type: 'LINK', linkData: { link: { url: WA_URL, target: '_blank' } } }],
           nodes: [],
         },
       ],
